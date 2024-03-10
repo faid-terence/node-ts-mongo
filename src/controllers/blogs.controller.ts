@@ -112,6 +112,27 @@ class BlogsController {
       res.status(500).json({ message: "Internal server error" });
     }
   }
+
+  async deleteComment(req: Request, res: Response) {
+    const { id, commentId } = req.params;
+    try {
+      const blog = await blogModel
+        .findById(id)
+        .select({ comments: { $elemMatch: { _id: commentId } } });
+      if (!blog) {
+        return res.status(404).json({ message: "Blog not found" });
+      }
+      const comment = blog.comments[0];
+      if (!comment) {
+        return res.status(404).json({ message: "Comment not found" });
+      }
+      blog.comments = blog.comments.filter((c) => c !== comment);
+      await blog.save();
+      res.status(200).json(blog);
+    } catch (error) {
+      res.status(500).json({ message: "Internal server error" });
+    }
+  }
 }
 
 export default BlogsController;

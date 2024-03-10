@@ -5,6 +5,7 @@ export interface IUser extends mongoose.Document {
   email: string;
   age: number;
   password: string;
+  isAdmin?: boolean;
 }
 
 const userSchema = new mongoose.Schema({
@@ -12,6 +13,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true },
   age: { type: Number, required: true },
   password: { type: String, required: true },
+  isAdmin: { type: Boolean, default: false },
 });
 
 const userModel = mongoose.model<IUser>("User", userSchema);
