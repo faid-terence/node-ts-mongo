@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import userModel from "../models/user";
 import bcrypt from "bcrypt";
+import { generateToken } from "../utils/generateToken";
 
 class UserController {
   async registerUser(req: Request, res: Response) {
@@ -40,7 +41,9 @@ class UserController {
       if (!validPassword) {
         return res.status(400).json({ message: "Invalid password" });
       }
-      res.status(200).json({ message: "User logged in successfully" });
+
+      const token = generateToken(userExists);
+      res.status(200).json({ message: "User logged in successfully", token });
     } catch (error) {
       res.status(500).json({ message: "Internal server error" });
     }
