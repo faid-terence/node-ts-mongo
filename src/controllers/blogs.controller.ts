@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import blogModel from "../models/blogs";
+import blogModel, { IBlog } from "../models/blogs";
+import commentModel, { IComment } from "../models/comments";
 
 class BlogsController {
   async createBlog(req: Request, res: Response) {
@@ -80,24 +81,6 @@ class BlogsController {
     }
   }
 
-  async createComment(req: Request, res: Response) {
-    const { id } = req.params;
-    const { content, author } = req.body;
-
-    try {
-      const blog = await blogModel.findById(id);
-      if (!blog) {
-        return res.status(404).json({ message: "Blog not found" });
-      }
-
-      blog.comments.push({ content, author });
-      await blog.save();
-      res.status(200).json(blog);
-    } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
-    }
-  }
-
   async likeBlog(req: Request, res: Response) {
     const { id } = req.params;
     try {
@@ -114,23 +97,62 @@ class BlogsController {
   }
 
   async deleteComment(req: Request, res: Response) {
-    const { id, commentId } = req.params;
+    const { blogId, commentId } = req.params;
+
     try {
-      const blog = await blogModel
-        .findById(id)
-        .select({ comments: { $elemMatch: { _id: commentId } } });
+      const blog: IBlog | null = await blogModel.findById(blogId);
       if (!blog) {
         return res.status(404).json({ message: "Blog not found" });
       }
-      const comment = blog.comments[0];
-      if (!comment) {
+      const commentIndex: number = blog.comments.findIndex(
+        (comment) => comment._id === commentId
+      );
+      if (commentIndex === -1) {
         return res.status(404).json({ message: "Comment not found" });
       }
-      blog.comments = blog.comments.filter((c) => c !== comment);
+      blog.comments.splice(commentIndex, 1);
       await blog.save();
-      res.status(200).json(blog);
+
+      return res
+        .status(200)
+        .json({ message: "Comment deleted successfully", blog });
     } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  }
+
+  async createComment(req: Request, res: Response) {
+    const { blogId } = req.params;
+    const { content, author } = req.body;
+
+    try {
+      const blog: IBlog | null = await blogModel.findById(blogId);
+      if (!blog) {
+        console.log(`Blog with ID ${blogId} not found`);
+        return res.status(404).json({ message: "Blog not found" });
+      }
+
+      const newComment: IComment = new commentModel({
+        content,
+        author,
+      });
+
+      await newComment.save();
+
+      blog.comments = newComment._id;
+
+      // Save the updated blog
+      await blog.save();
+
+      console.log("Updated blog:", blog);
+
+      return res
+        .status(201)
+        .json({ message: "Comment added successfully", comment: newComment });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
     }
   }
 }
