@@ -1,0 +1,136 @@
+openapi: 3.0.0
+info:
+  title: Blog API
+  description: API for managing blogs and comments
+  version: 1.0.0
+  tags:
+    - name: blogs
+      description: Blog operations
+paths:
+  /api/blogs:
+    get:
+      summary: Retrieve all blogs
+      tags:
+        - blogs
+      responses:
+        "200":
+          description: A list of blogs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Blog"
+    post:
+      summary: Create a new blog
+      tags:
+        - blogs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlogInput"
+      responses:
+        "200":
+          description: Blog created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Blog"
+  /blogs/{id}:
+    get:
+      summary: Retrieve a single blog by ID
+      tags:
+        - blogs
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the blog to retrieve
+      responses:
+        "200":
+          description: A single blog
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Blog"
+    patch:
+      summary: Update a blog by ID
+      tags:
+        - blogs
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the blog to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BlogInput"
+      responses:
+        "200":
+          description: Blog updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Blog"
+    delete:
+      summary: Delete a blog by ID
+      tags:
+        - blogs
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          description: ID of the blog to delete
+      responses:
+        "200":
+          description: Blog deleted successfully
+components:
+  schemas:
+    Blog:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        content:
+          type: string
+        author:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        comments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Comment"
+    BlogInput:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+        author:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
