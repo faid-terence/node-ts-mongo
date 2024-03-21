@@ -6,7 +6,7 @@ import authRoutes from "./routes/user.routes";
 import commentsRoutes from "./routes/comments.routes";
 
 const app = express();
-const port = 8000;
+const port = 8000 || process.env.PORT;
 
 app.use(express.json());
 
