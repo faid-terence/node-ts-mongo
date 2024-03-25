@@ -4,8 +4,10 @@ import app from "../src/index"; // Assuming your Express app is exported from '.
 import blogModel from "../src/models/blogs";
 import commentModel from "../src/models/comments";
 import { IComment } from "../src/models/comments";
+import userModel from "../src/models/user";
 
 const blogId = new mongoose.Types.ObjectId();
+const userId = new mongoose.Types.ObjectId();
 const commentId = new mongoose.Types.ObjectId();
 
 describe("BlogsController", () => {
@@ -22,11 +24,20 @@ describe("BlogsController", () => {
       content: "Test Comment",
       author: "Test Author",
     });
+
+    await userModel.create({
+      _id: userId,
+      name: "Test User",
+      email: "faidtere1@gmail.com",
+      password: "password",
+      age: 25,
+    });
   });
 
   afterAll(async () => {
     await blogModel.deleteMany();
     await commentModel.deleteMany();
+    await userModel.deleteMany();
     await mongoose.disconnect();
   });
 
@@ -36,6 +47,7 @@ describe("BlogsController", () => {
       expect(res.statusCode).toBe(200);
       expect(res.body).toBeInstanceOf(Array);
     });
+    
   });
 
   describe("GET /api/blogs/:id", () => {
@@ -136,6 +148,71 @@ describe("BlogsController", () => {
       );
       expect(res.statusCode).toBe(404);
       expect(res.body).toHaveProperty("message", "Blog not found");
+    });
+  });
+
+  describe("POST /api/auth", () => {
+    it("should create a new user", async () => {
+      const newUser = {
+        name: "New Test User",
+        email: "newtestuser@example.com",
+        age: 25,
+        password: "password",
+      };
+      const res = await request(app).post("/api/auth/register").send(newUser); // Use app instead of server
+      expect(res.statusCode).toBe(201);
+      expect(res.body).toHaveProperty("name", newUser.name);
+      expect(res.body).toHaveProperty("email", newUser.email);
+      expect(res.body).toHaveProperty("age", newUser.age);
+      // Optionally check isAdmin if required
+      // expect(res.body).toHaveProperty("isAdmin", false);
+    });
+
+    it("should return 400 if user already exists", async () => {
+      const existingUser = {
+        name: "Test User",
+        email: "newtestuser@example.com",
+        age: 25,
+        password: "password",
+      };
+      const res = await request(app)
+        .post("/api/auth/register")
+        .send(existingUser);
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty("message", "User already exists");
+    });
+  });
+
+  describe("POST /api/auth/login", () => {
+    it("should login a user", async () => {
+      const user = {
+        email: "newtestuser@example.com",
+        password: "password",
+      };
+      const res = await request(app).post("/api/auth/login").send(user);
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty("message", "User logged in successfully");
+      expect(res.body).toHaveProperty("token");
+    });
+
+    it("should return 400 if user does not exist", async () => {
+      const nonExistentUser = {
+        email: "nonexistuser@example.com",
+        password: "password",
+      };
+      const res = await request(app)
+        .post("/api/auth/login")
+        .send(nonExistentUser);
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty("message", "User does not exist");
+    });
+  });
+
+  describe("it should get all comments", () => {
+    it("should return all comments", async () => {
+      const res = await request(app).get("/api/comments");
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toBeInstanceOf(Array);
     });
   });
 });
