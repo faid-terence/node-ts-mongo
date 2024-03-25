@@ -9,7 +9,7 @@
     "dev": "nodemon --exec npx ts-node src/index.ts",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint --fix --ext .ts",
-    "test": "jest --watchAll --coverage",
+    "test": "jest",
     "test:ci": "jest --ci --coverage"
   },
   "author": "",
