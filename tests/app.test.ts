@@ -10,7 +10,7 @@ const blogId = new mongoose.Types.ObjectId();
 const userId = new mongoose.Types.ObjectId();
 const commentId = new mongoose.Types.ObjectId();
 
-describe("BlogsController", () => {
+describe("APP TESTS", () => {
   beforeAll(async () => {
     await blogModel.create({
       _id: blogId,
@@ -47,7 +47,13 @@ describe("BlogsController", () => {
       expect(res.statusCode).toBe(200);
       expect(res.body).toBeInstanceOf(Array);
     });
-    
+
+    it("should return internal server error if there is an error", async () => {
+      jest.spyOn(blogModel, "find").mockRejectedValue(new Error("Error"));
+      const res = await request(app).get("/api/blogs");
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toHaveProperty("message", "Internal server error");
+    });
   });
 
   describe("GET /api/blogs/:id", () => {
@@ -85,6 +91,15 @@ describe("BlogsController", () => {
       const res = await request(app).post("/api/blogs").send(existingBlog);
       expect(res.statusCode).toBe(400);
       expect(res.body).toHaveProperty("message", "Blog already exists");
+    });
+
+    it("should return internal server error if title is missing", async () => {
+      const newBlog = {
+        content: "This is a new test blog",
+      };
+      const res = await request(app).post("/api/blogs").send(newBlog);
+      expect(res.statusCode).toBe(500);
+      expect(res.body).toHaveProperty("message", "Internal server error");
     });
   });
 
@@ -206,13 +221,25 @@ describe("BlogsController", () => {
       expect(res.statusCode).toBe(400);
       expect(res.body).toHaveProperty("message", "User does not exist");
     });
-  });
 
-  describe("it should get all comments", () => {
-    it("should return all comments", async () => {
-      const res = await request(app).get("/api/comments");
-      expect(res.statusCode).toBe(200);
-      expect(res.body).toBeInstanceOf(Array);
+    it("should return 400 if password is incorrect", async () => {
+      const incorrectPassword = {
+        email: "newtestuser@example.com",
+        password: "incorrectpassword",
+      };
+      const res = await request(app)
+        .post("/api/auth/login")
+        .send(incorrectPassword);
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty("message", "Invalid password");
+    });
+
+    describe("it should get all comments", () => {
+      it("should return all comments", async () => {
+        const res = await request(app).get("/api/comments");
+        expect(res.statusCode).toBe(200);
+        expect(res.body).toBeInstanceOf(Array);
+      });
     });
   });
 });

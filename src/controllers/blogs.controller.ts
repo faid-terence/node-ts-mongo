@@ -39,7 +39,7 @@ class BlogsController {
       }
       res.status(200).json(blog);
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({ message: "Internal server error" });
     }
   }
 
