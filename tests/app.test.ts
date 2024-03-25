@@ -47,6 +47,7 @@ describe("BlogsController", () => {
       expect(res.statusCode).toBe(200);
       expect(res.body).toBeInstanceOf(Array);
     });
+    
   });
 
   describe("GET /api/blogs/:id", () => {
@@ -165,6 +166,53 @@ describe("BlogsController", () => {
       expect(res.body).toHaveProperty("age", newUser.age);
       // Optionally check isAdmin if required
       // expect(res.body).toHaveProperty("isAdmin", false);
+    });
+
+    it("should return 400 if user already exists", async () => {
+      const existingUser = {
+        name: "Test User",
+        email: "newtestuser@example.com",
+        age: 25,
+        password: "password",
+      };
+      const res = await request(app)
+        .post("/api/auth/register")
+        .send(existingUser);
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty("message", "User already exists");
+    });
+  });
+
+  describe("POST /api/auth/login", () => {
+    it("should login a user", async () => {
+      const user = {
+        email: "newtestuser@example.com",
+        password: "password",
+      };
+      const res = await request(app).post("/api/auth/login").send(user);
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toHaveProperty("message", "User logged in successfully");
+      expect(res.body).toHaveProperty("token");
+    });
+
+    it("should return 400 if user does not exist", async () => {
+      const nonExistentUser = {
+        email: "nonexistuser@example.com",
+        password: "password",
+      };
+      const res = await request(app)
+        .post("/api/auth/login")
+        .send(nonExistentUser);
+      expect(res.statusCode).toBe(400);
+      expect(res.body).toHaveProperty("message", "User does not exist");
+    });
+  });
+
+  describe("it should get all comments", () => {
+    it("should return all comments", async () => {
+      const res = await request(app).get("/api/comments");
+      expect(res.statusCode).toBe(200);
+      expect(res.body).toBeInstanceOf(Array);
     });
   });
 });
